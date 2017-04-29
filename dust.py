@@ -576,7 +576,7 @@ class Console(Graphics):
 	
 	def __init__(self, w=80, h=25, fps=50):
 		self.w, self.h, self.fps = w, h, fps
-		libtcodpy.console_set_custom_font('libtcodpy/data/fonts/terminal8x14_gs_ro.png', libtcodpy.FONT_TYPE_GREYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
+		libtcodpy.console_set_custom_font('data/fonts/terminal8x14_gs_ro.png', libtcodpy.FONT_TYPE_GREYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
 		libtcodpy.console_init_root(w, h, 'Dust v0.01', False)
 		self.console = 0
 		libtcodpy.sys_set_fps(fps)
