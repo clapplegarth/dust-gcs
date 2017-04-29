@@ -1,0 +1,76 @@
+{ "types": [
+
+{	"name": "Test",
+	"floor_char": 46,
+	"floor_color": 7,
+	"wall_char": 47,
+	"wall_color": 7
+},
+{	"name": "No",
+	"floor_char": 0,
+	"floor_color": 7,
+	"wall_char": 0,
+	"wall_color": 7
+},
+{	"name": "Void",
+	"floor_char": 32,
+	"floor_color": 7,
+	"wall_char": 32,
+	"wall_color": 7
+},
+{	"name": "Invisible",
+	"floor_char": 32,
+	"floor_color": 7,
+	"wall_char": 32,
+	"wall_color": 7
+},
+{	"name": "Custom",
+	"floor_char": 63,
+	"floor_color": 1,
+	"wall_char": 63,
+	"wall_color": 9
+},
+{	"name": "Grass",
+	"floor_char": 34,
+	"floor_color": 2,
+	"wall_char": 177,
+	"wall_color": 42
+},
+{	"name": "Dirt",
+	"floor_char": 58,
+	"floor_color": 6,
+	"wall_char": 178,
+	"wall_color": 134
+},
+{	"name": "Rock",
+	"floor_char": 176,
+	"floor_color": 8,
+	"wall_char": 178,
+	"wall_color": 24
+},
+{	"name": "Sand",
+	"floor_char": 177,
+	"floor_color": 126,
+	"wall_char": 176,
+	"wall_color": 239
+},
+{	"name": "Tiled",
+	"floor_char": 254,
+	"floor_color": 3,
+	"wall_char": 254,
+	"wall_color": 134
+},
+{	"name": "Carpeted",
+	"floor_char": 177,
+	"floor_color": 6,
+	"wall_char": 177,
+	"wall_color": 85
+},
+{	"name": "Sand",
+	"floor_char": 177,
+	"floor_color": 126,
+	"wall_char": 176,
+	"wall_color": 239
+}
+
+]}
