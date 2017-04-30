@@ -5,15 +5,6 @@ from copy import deepcopy
 import libtcodpy
 import json
 	
-def brownian_iterxy(obj, func, num_iterations=100, x=0, y=0, **kwargs):
-		for i in range(num_iterations):
-			n = random.randint(0,3)
-			x += [0,0,1,-1][n]
-			y += [-1,1,0,0][n]
-			x, y = obj.clamp_to_bounds(x, y)
-			getattr(obj, func)(x, y, **kwargs)
-
-
 class RootClass:
 	def redraw(self, dest_graphics, *args, **kwargs):
 		if hasattr(self, 'boards'):
@@ -576,7 +567,7 @@ class Console(Graphics):
 	
 	def __init__(self, w=80, h=25, fps=50):
 		self.w, self.h, self.fps = w, h, fps
-		libtcodpy.console_set_custom_font('libtcodpy/data/fonts/terminal8x14_gs_ro.png', libtcodpy.FONT_TYPE_GREYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
+		libtcodpy.console_set_custom_font('data/fonts/terminal8x14_gs_ro.png', libtcodpy.FONT_TYPE_GREYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
 		libtcodpy.console_init_root(w, h, 'Dust v0.01', False)
 		self.console = 0
 		libtcodpy.sys_set_fps(fps)
@@ -609,12 +600,20 @@ class Console(Graphics):
 	def random_char(self):
 		return self.randint(0, 255)
 
-	def random_color():
+	def random_color(self):
 		return self.randint(0, 15)
 		
-	def random_id():
+	def random_id(self):
 		global tilesaurus
 		return self.randint(0, len(tilesaurus))
 		
 	def get_random_position(self, material):
 		return (self.randint(material.x, material.x+material.w), self.randint(material.y, material.y+material.h))
+		
+	def brownian_iterxy(self, obj, func, num_iterations=100, x=0, y=0, **kwargs):
+		for i in range(num_iterations):
+			n = self.randint(0,3)
+			x += [0,0,1,-1][n]
+			y += [-1,1,0,0][n]
+			x, y = obj.clamp_to_bounds(x, y)
+			getattr(obj, func)(x, y, **kwargs)

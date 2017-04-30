@@ -21,7 +21,7 @@ def mainer():
 		elif key.c == ord('d'):
 			for i in range(10):
 				id, color, param = my_console.random_id(), my_console.random_color(), my_console.random_char()
-				dust.brownian_iterxy(my_layer, 'set_game_tile', 100, *my_console.get_random_position(my_layer), id=id, color=color, param=param)
+				my_console.brownian_iterxy(my_layer, 'set_game_tile', 100, *my_console.get_random_position(my_layer), id=id, color=color, param=param)
 		elif key.c == ord('a'):
 			for l in my_board.layers:
 				l.fill(1, 7, 0)
