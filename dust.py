@@ -6,7 +6,21 @@ import libtcodpy
 import json
 	
 class RootClass:
+	"""
+	Class for certain functions that require all of the objects in the Dust data structure.
+	Methods:
+		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
+	"""
+
 	def redraw(self, dest_graphics, *args, **kwargs):
+		"""
+		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
+		Drills down recursively through the Dust object heirarchy to reach
+		each object's Sprite, and then calls redraw() on the sprite.  This
+		effectively redraws whatever the current board is.
+		"""
+		if hasattr(self, 'current_board'):
+			self.current_board.redraw(dest_graphics, *args, **kwargs)
 		if hasattr(self, 'boards'):
 			for x in self.boards:
 				x.redraw(dest_graphics, *args, **kwargs)
@@ -148,18 +162,30 @@ class Material(RootClass):
 			
 	def fill_sprite(self, *args, **kwargs):
 		"""
-		Material.fill(char, color) returns None
+		Material.fill_sprite(char, color) returns None
 		Fill this object's Sprite with the given char and color.
 		"""
 		self.get_sprite().fill(*args, **kwargs)
 		
 	def get_bounds(self):
+		"""
+		Material.get_bounds() returns tuple (int, int, int, int)
+		Returns the boundaries of the object as a tuple containing the rectangle x1, y1, x2, y2.
+		If the object does not have a width or height, returns a single-tile area.
+		"""
+
 		if hasattr(self, 'w') and hasattr(self, 'h'):
 			return (self.x, self.y, self.x+self.w, self.y+self.h)
 		else:
 			return (self.x, self.y, self.x, self.y)
 			
 	def clamp_to_bounds(self, x, y):
+		"""
+		Material.clamp_to_bounds(int x, int y) returns tuple (int, int)
+		Takes an x and y value and clamps it to the boundaries of this Material based on its
+		position and dimensions.
+		"""
+
 		return max(self.x, min(self.x+self.w-1, x)), max(self.y, min(self.y+self.h-1, y))
 
 
@@ -168,7 +194,11 @@ class World(Saveable):
 	A Dust World is the root container of a project.  It contains global counters, boards, actors, and world settings.
 	Methods:
 		World.get_footprint() returns dict
+		World.create_default_world() returns None
 		World.tick() returns None
+		World.blit(Graphics dest_graphics, ...) returns None
+		World.create_default_world() returns None
+		World.save(str file_path) returns bool
 	"""
 	def __init__(self, name="New World", tilesaurus_path='data/tilesaurus.json', file_path=False):
 		with open(tilesaurus_path) as fp:
@@ -193,6 +223,7 @@ class World(Saveable):
 			wo = World()
 			wo.load_from_dict(j)
 			return wo
+			self.current_board = self.boards[0]
 			
 	def create_default_world(self):
 		"""
@@ -255,6 +286,7 @@ class Board(Saveable, Material):
 		Board.get_footprint() returns dict
 		Board.tick() returns None
 		Board.blit(Graphics dest_graphics, ...) returns None
+		Board.get_sprite() returns Sprite
 	"""
 	def __init__(self, w=80, h=25, x=0, y=0, name="New Board"):
 		self.w, self.h, self.x, self.y = w, h, x, y
@@ -268,6 +300,10 @@ class Board(Saveable, Material):
 	get_footprint.__doc__ = Saveable.get_footprint.__doc__ # Inherit docstring.
 	
 	def get_sprite(self):
+		"""
+		Board.get_sprite() returns Sprite
+		Returns the Board's last layer's Sprite.
+		"""
 		return self.layers[-1].get_sprite()
 		
 	def tick(self):
@@ -296,11 +332,12 @@ class Layer(Saveable, Material):
 		Layer.get_footprint() returns dict
 		Layer.tick() returns None
 		Layer.blit(Graphics dest_graphics, ...) returns None
-		Layer.flip() returns None
+		Layer.flip(Sprite dest_graphics) returns None
 		Layer.render_game_tile(int id, int color, int param) returns tuple (int, int)
 		Layer.draw_game_tile(int x, int y, int id, int color, int param) returns None
 		Layer.set_game_tile(int x, int y, int id, int color, int param) returns None
 		Layer.set_game_tile_param(int x, int y, int param) returns None
+		Layer.fill(int id, int color, int param)
 	"""
 	def __init__(self, w=80, h=25, x=0, y=0, name="New Layer"):
 		self.w, self.h, self.x, self.y = w, h, x, y
@@ -392,11 +429,23 @@ class Layer(Saveable, Material):
 		self.get_sprite().fill(*args, **kwargs)
 		
 	def fill(self, id, color, param):
+		"""
+		Layer.fill(int id, int color, int param)
+		Fills the Layer with the given tile type.
+		"""
 		for i in range(len(self.gamemap)):
 			self.gamemap[i] = [id, color, param]
 		self.dirty = True
 	
 	def fill_func(self, **kwargs):
+		"""
+		Layer.fill_func(...)
+		Fills the Layer based on passed functions.  Calls to this method can include functions and arguments.
+		The functions available to pass are id_func, color_func and param_func.  If id_args, color_args and param_args
+		(respectively) are passed, the respective function gets a number of the address of that tile.  For example, to
+		make a layer all Grass, you might call:  my_layer.fill_func(id_func = lambda: console.tilesaurus.grass).
+		To make a layer have random colors, one would call my_layer.fill_func(color_func = my_console.random_id).
+		"""
 		for i in range(len(self.gamemap)):
 			for f in [['id_func', 'id_args', 0], ['color_func', 'color_args', 1], ['param_func', 'param_args', 2]]:
 				if hasattr(kwargs, f[0]):
@@ -445,6 +494,7 @@ class Graphics(Material):
 	Methods:
 		Graphics.blit(Graphics dest_graphics, ...) returns None
 		Graphics.get_color(int c) returns libtcodpy.Color
+		Graphics.clear() returns None
 	"""
 	def __init__(self, w=80, h=25, x=0, y=0, new_console=True):
 		self.w, self.h, self.x, self.y = w, h, x, y
@@ -464,11 +514,15 @@ class Graphics(Material):
 	def get_color(self, c):
 		"""
 		Graphics.get_color(int c) returns libtcodpy.Color
-		Returns a libtcodpy.Color object representing the color c of the CGA  color set.
+		Returns a libtcodpy.Color object representing the color c of the CGA color set.
 		"""
 		return [libtcodpy.black, libtcodpy.dark_blue, libtcodpy.dark_green, libtcodpy.dark_cyan, libtcodpy.dark_red, libtcodpy.dark_purple, libtcodpy.dark_orange, libtcodpy.light_gray, libtcodpy.dark_gray, libtcodpy.light_blue, libtcodpy.light_green, libtcodpy.light_cyan, libtcodpy.light_red, libtcodpy.light_magenta, libtcodpy.light_yellow, libtcodpy.white, libtcodpy.han][c]
 		
 	def clear(self):
+		"""
+		Graphics.clear() returns None
+		Tells the builtin console to clear itself.
+		"""
 		libtcodpy.console_clear(self.console)
 
 
@@ -479,8 +533,8 @@ class Sprite(Graphics, Saveable):
 		Sprite.get_tile_ref(int x, int y) returns int
 		Sprite.get_tile(int x, int y) returns tuple (int, int)
 		Sprite.put_tile(int x, int y, int char, int color) returns None
+		Sprite.fill_sprite(int char, int color) returns None
 		Sprite.redraw(Graphics dest_graphics) returns none
-		Sprite.fill(int char, int color) returns None
 	"""
 
 	def __init__(self, w=80, h=25, x=0, y=0, new_console=True):
@@ -562,6 +616,11 @@ class Console(Graphics):
 		Console.end_cycle() returns None
 		Console.get_key() returns libtcodpy.KeyEvent or something, probably...
 		Console.is_terminated() returns boolean
+		Console.randint(...) returns int
+		Console.random_char() returns int
+		Console.random_color() returns int
+		Console.random_id() returns int
+		Console.get_random_position(Material material) returns tuple (x, y)
 	"""
 	import libtcodpy
 	
@@ -595,22 +654,50 @@ class Console(Graphics):
 		return libtcodpy.console_is_window_closed()
 	
 	def randint(self, *args):
+		"""
+		Console.randint(...) returns int
+		Returns a random integer from the RNG.  Arguments are passed directly to console function but
+		generally take the form min, max.
+		"""
 		return libtcodpy.random_get_int(self.rng, *args)
 
 	def random_char(self):
+		"""
+		Console.random_char() returns int
+		Returns a random character code.
+		"""
 		return self.randint(0, 255)
 
 	def random_color(self):
+		"""
+		Console.random_color() returns int
+		Returns a random color code.
+		"""
 		return self.randint(0, 15)
 		
 	def random_id(self):
+		"""
+		Console.random_id() returns int
+		Returns a random tile ID code.
+		"""
 		global tilesaurus
 		return self.randint(0, len(tilesaurus))
 		
 	def get_random_position(self, material):
+		"""
+		Console.get_random_position(Material material) returns tuple (x, y)
+		Get a random (x, y) position inside the bounds of the given material.
+		"""
 		return (self.randint(material.x, material.x+material.w), self.randint(material.y, material.y+material.h))
 		
 	def brownian_iterxy(self, obj, func, num_iterations=100, x=0, y=0, **kwargs):
+		"""
+		dust.brownian_iterxy(Material obj, function func, int num_iterations, int x, inty, **kwargs)
+		Perform a random walk of num_iterations steps, starting at x, y.  The walk does not go outside
+		of the dimensions of obj.  For every step of the walk, func is called with the walk's current
+		x and y position as well as a copy of the arguments passed in **kwargs; for example, this could
+		be a draw function.
+		"""
 		for i in range(num_iterations):
 			n = self.randint(0,3)
 			x += [0,0,1,-1][n]
