@@ -33,6 +33,22 @@ class RootClass:
 				x.redraw(dest_graphics, *args, **kwargs)
 		if hasattr(self, 'sprite'):
 			self.get_sprite().redraw(dest_graphics, *args, **kwargs)
+	
+	def find_main_display(self):
+		"""
+		RootClass.find_main_display() returns None
+		Searches self and then parents for reference for main_display.  If
+			found, returns main_display; otherwise iterates with parent.
+			This function sets self.main_display and returns None.
+		"""
+		if hasattr(self, 'main_display'):
+			return 
+		elif hasattr(self, 'parent'):
+			self.main_display = self.parent.find_main_display()
+			return
+		else:
+			print "Couldn't find main_display in any parents for", repr(self)
+			raise ReferenceError
 
 
 class Saveable(RootClass):
@@ -215,12 +231,13 @@ class World(Saveable):
 		World.create_default_world()
 		World.save(str file_path) returns bool
 	"""
-	def __init__(self, name="New World", tilesaurus_path='data/tilesaurus.json', file_path=False):
+	def __init__(self, main_display, name="New World", tilesaurus_path='data/tilesaurus.json', file_path=False):
 		with open(tilesaurus_path) as fp:
 			global tilesaurus
 			tilesaurus = json.load(fp)['types']
 		
 		# set defaults before loading, so that they may be overridden
+		self.main_display = main_display
 		self.name = name
 		self.counters = {}
 		self.boards = []
@@ -266,7 +283,7 @@ class World(Saveable):
 		for i in self.boards:
 			i.tick()
 			
-	def blit(self, dest_graphics, *args, **kwargs):
+	def blit(self, dest_graphics):
 		"""
 		World.blit(Graphics dest_graphics, ...)
 		Blits the World's Boards and Layers to dest_graphics and passes other
@@ -274,8 +291,8 @@ class World(Saveable):
 		"""
 		dest_graphics.clear()
 		for i in self.layers[::-1]:
-			i.blit(dest_graphics, *args, **kwargs)
-		self.current_board.blit(dest_graphics, *args, **kwargs)
+			i.blit(dest_graphics)
+		self.current_board.blit(dest_graphics)
 		
 	def save(self, file_path=None):
 		"""
@@ -306,6 +323,7 @@ class Board(Saveable, Material):
 	"""
 	def __init__(self, parent, w=80, h=25, x=0, y=0, name="New Board"):
 		self.parent = parent
+		self.find_main_display()
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
 		self.counters = {}
@@ -333,13 +351,13 @@ class Board(Saveable, Material):
 		for i in self.layers:
 			i.tick()
 			
-	def blit(self, dest_graphics, *args, **kwargs):
+	def blit(self, dest_graphics):
 		"""
 		Board.blit(Graphics dest_graphics, ...)
 		Blits the Board's Layers to dest_graphics and passes other arguments through.
 		"""
 		for i in self.layers[::-1]:
-			i.blit(dest_graphics, *args, **kwargs)
+			i.blit(dest_graphics)
 
 
 class Layer(Saveable, Material):
@@ -359,9 +377,10 @@ class Layer(Saveable, Material):
 	"""
 	def __init__(self, parent, w=80, h=25, x=0, y=0, name="New Layer"):
 		self.parent = parent
+		self.find_main_display()
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
-		self.sprite = [Sprite(w, h, x, y)]
+		self.sprite = [Sprite(self, w, h, x, y)]
 		self.actors = []
 		self.gamemap = [(1, 0, 7)] * (self.w * self.h)
 		self.dirty = True
@@ -379,18 +398,17 @@ class Layer(Saveable, Material):
 		for i in self.actors:
 			i.tick()
 			
-	def blit(self, dest_graphics, *args, **kwargs):
+	def blit(self, dest_graphics):
 		"""
 		Layer.blit(Graphics dest_graphics, ...)
 		Blits the Layer's sprite and Actors to dest_graphics and passes other arguments through.
 		"""
 		if self.dirty:
-			print "DIRTY!"
 			self.flip(dest_graphics)
 			self.dirty = False
-		self.get_sprite().blit(dest_graphics, *args, **kwargs)
+		self.get_sprite().blit(dest_graphics)
 		for i in self.actors[::-1]:
-			i.blit(dest_graphics, *args, **kwargs)
+			i.blit(dest_graphics)
 			
 	def flip(self, dest_graphics):
 		"""
@@ -476,7 +494,7 @@ class Layer(Saveable, Material):
 
 class Actor(Saveable, Material):
 	"""
-	An Actor is a Dust entity that can do a number of things.
+	An Actor is a programmable Dust entity that can execute Dramatic code.
 	Methods:
 		Actor.get_footprint() returns dict
 		Actor.tick() returns None
@@ -484,9 +502,10 @@ class Actor(Saveable, Material):
 	"""
 	def __init__(self, parent, w=1, h=1, x=0, y=0, name="New Actor"):
 		self.parent = parent
+		self.find_main_display()
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
-		self.sprite = [Sprite(w, h, x, y)]
+		self.sprite = [Sprite(self, w, h, x, y)]
 		self.counters = {}
 		self.program = ""
 		
@@ -500,23 +519,26 @@ class Actor(Saveable, Material):
 		Runs the Actor's tick...
 		"""
 		pass
-	def blit(self, dest_graphics, *args, **kwargs):
+	def blit(self, dest_graphics):
 		"""
 		Actor.blit(Graphics dest_graphics, ...)
-		Blits the Layer's Sprite to dest_graphics and passes other arguments through.
+		Blits the Layer's Sprite to dest_graphics and passes other arguments
+		through.
 		"""
-		self.sprite[0].blit(dest_graphics, *args, **kwargs)
+		self.sprite[0].blit(dest_graphics, x=self.x, y=self.y)
 
 
 class Graphics(Material):
 	"""
-	A Graphics object is a lower level wrapper for the underlying console wrapper.  It is not serializable, because it does not contain map data.
+	A Graphics object is a lower level wrapper for the underlying console
+	wrapper.  It is not serializable, because it does not contain map data.
 	Methods:
 		Graphics.blit(Graphics dest_graphics, ...) returns None
 		Graphics.get_color(int c) returns libtcodpy.Color
 		Graphics.clear() returns None
 	"""
-	def __init__(self, w=80, h=25, x=0, y=0, new_console=True):
+	def __init__(self, parent, w=80, h=25, x=0, y=0, new_console=True):
+		self.parent = parent
 		self.w, self.h, self.x, self.y = w, h, x, y
 		if new_console:
 			self.console = libtcodpy.console_new(self.w, self.h)
@@ -525,12 +547,13 @@ class Graphics(Material):
 		else:
 			self.console = False
 			
-	def blit(self, dest_graphics):
+	def blit(self, dest_graphics, x=0, y=0):
 		"""
 		Graphics.blit(Graphics dest_graphics, ...) returns None
 		Prints the libtcodpy console contained in self.console to the Graphics object supplied by dest_graphics.
 		"""
-		libtcodpy.console_blit(self.console, 0, 0, self.w, self.h, dest_graphics.console, 0, 0)
+		libtcodpy.console_blit(self.console, 0, 0, self.w, self.h, dest_graphics.console, x, y)
+
 	def get_color(self, c):
 		"""
 		Graphics.get_color(int c) returns libtcodpy.Color
@@ -548,7 +571,9 @@ class Graphics(Material):
 
 class Sprite(Graphics, Saveable):
 	"""
-	A Sprite object is a higher level wrapper that extends Graphics and is seriable.  It contains a list of (char, color) tuples that represent a map of ASCII characters and CGA color codes.
+	A Sprite object is a higher level wrapper that extends Graphics and is
+	seriable.  It contains a list of (char, color) tuples that represent a map
+	of ASCII characters and CGA color codes.
 	Methods:
 		Sprite.get_tile_ref(int x, int y) returns int
 		Sprite.get_tile(int x, int y) returns tuple (int, int)
@@ -557,12 +582,12 @@ class Sprite(Graphics, Saveable):
 		Sprite.redraw(Graphics dest_graphics) returns none
 	"""
 
-	def __init__(self, w=80, h=25, x=0, y=0, new_console=True):
-		Graphics.__init__(self, w, h, x, y, new_console) # call parent init function to do grunt work: position & open console
+	def __init__(self, parent, w=80, h=25, x=0, y=0, new_console=True):
+		Graphics.__init__(self, parent, w, h, x, y, new_console) # call parent init function to do grunt work: position & open console
 		self.tilemap = [[0, 7]] * (self.w * self.h)
 		self.tilemask = 0
 		self.dirty = True
-		#self.redraw(self)
+		self.redraw(self)
 		
 	def get_footprint(self):
 		return {'w': False, 'h': False, 'x': False, 'y': False, 'tilemap': False, 'tilemask': False}
@@ -664,7 +689,7 @@ class Console(Graphics):
 		Console.get_key() returns libtcodpy.KeyEvent or something, probably... ~~
 		Check for keypresses and return an event representing the state of the keyboard.
 		"""
-		return libtcodpy.console_check_for_keypress()
+		return libtcodpy.console_check_for_keypress(libtcodpy.KEY_PRESSED | libtcodpy.KEY_RELEASED)
 
 	def is_terminated(self):
 		"""
@@ -676,8 +701,8 @@ class Console(Graphics):
 	def randint(self, *args):
 		"""
 		Console.randint(...) returns int
-		Returns a random integer from the RNG.  Arguments are passed directly to console function but
-		generally take the form min, max.
+		Returns a random integer from the RNG.  Arguments are passed directly
+		to console function but generally take the form min, max.
 		"""
 		return libtcodpy.random_get_int(self.rng, *args)
 
@@ -712,11 +737,13 @@ class Console(Graphics):
 		
 	def brownian_iterxy(self, obj, func, num_iterations=100, x=0, y=0, **kwargs):
 		"""
-		dust.brownian_iterxy(Material obj, function func, int num_iterations, int x, inty, **kwargs)
-		Perform a random walk of num_iterations steps, starting at x, y.  The walk does not go outside
-		of the dimensions of obj.  For every step of the walk, func is called with the walk's current
-		x and y position as well as a copy of the arguments passed in **kwargs; for example, this could
-		be a draw function.
+		dust.brownian_iterxy(Material obj, function func, int num_iterations,
+			int x, inty, **kwargs)
+		Perform a random walk of num_iterations steps, starting at x, y.  The
+		walk does not go outside of the dimensions of obj.  For every step of
+		the walk, func is called with the walk's current x and y position as
+		well as a copy of the arguments passed in **kwargs; for example, this
+		could be a draw function that takes x, y, char and color.
 		"""
 		for i in range(num_iterations):
 			n = self.randint(0,3)
@@ -724,3 +751,16 @@ class Console(Graphics):
 			y += [-1,1,0,0][n]
 			x, y = obj.clamp_to_bounds(x, y)
 			getattr(obj, func)(x, y, **kwargs)
+	
+	def line_iter(self, obj, func, x1, y1, x2, y2, heavy=False, **kwargs):
+		x, y = x1, y1
+		if heavy:
+			s = abs(x1-x2) + abs(y1-y2)
+		else:
+			s = max(abs(x1-x2), abs(y1-y2))
+		for i in range(s):
+			m1 = (i / float(s))
+			m2 = ((s - i) / float(s))
+			x, y = obj.clamp_to_bounds( int((x1 * m1) + (x2 * m2)), int((y1 * m1) + (y2 * m2)) )
+			getattr(obj, func)(x, y, **kwargs)
+
