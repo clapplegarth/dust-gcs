@@ -7,7 +7,8 @@ import json
 	
 class RootClass:
 	"""
-	Class for certain functions that require all of the objects in the Dust data structure.
+	Class for certain functions that require all of the objects in the Dust
+		data structure.
 	Methods:
 		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
 	"""
@@ -15,9 +16,9 @@ class RootClass:
 	def redraw(self, dest_graphics, *args, **kwargs):
 		"""
 		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
-		Drills down recursively through the Dust object heirarchy to reach
-		each object's Sprite, and then calls redraw() on the sprite.  This
-		effectively redraws whatever the current board is.
+		Drills down recursively through the Dust object heirarchy to
+			reach each object's Sprite, and then calls redraw() on the
+			sprite.  This effectively redraws the current board.
 		"""
 		if hasattr(self, 'current_board'):
 			self.current_board.redraw(dest_graphics, *args, **kwargs)
@@ -49,10 +50,13 @@ class Saveable(RootClass):
 		"""
 		Saveable.load_from_dict(dict load_dict)
 			returns None
-		Takes a dictionary loaded from JSON containing properties that are
-			in this object's footprint.  If the footprint's value for the property
-			is False, the value is loaded as is; if the footprint's value is a
-			class name, it is loaded as a list of classes.
+		Takes a dictionary loaded from JSON containing properties that
+			are in this object's footprint.  The footprint describes how
+			the object should be loaded and saved in a file format.  If the
+			footprint's value for a given property is False, the value is
+			serialized or de-serialized as-is; if the footprint's value is
+			a class name, it is loaded as a list of classes, which, in
+			turn, have load_from_dict called to deserialize them.
 		See also:  Saveable.get_footprint, Saveable.serialize
 		"""
 		footprint = self.get_footprint()
@@ -76,7 +80,12 @@ class Saveable(RootClass):
 	def get_footprint(self):
 		"""
 		Saveable.get_footprint() returns dict
-		Returns a comprehensive list of values relevant to saving and loading.  The values are in the form {property: obj}, where property is the name of the property (i.e., what you would pass to getattr), and obj is either False for a static JSONable data type (list, int, string), or a class' name if the data type is a list of that class.
+		Returns a comprehensive list of values relevant to saving and
+			loading.  The values are in the form {property: obj}, where
+			property is the name of the property (i.e., what you would pass
+			to getattr), and obj is either False for a static JSONable data
+			type (list, int, string), or a class' name if the data type is
+			a list of that class.
 		See also:  Saveable.load_from_dict, Saveable.serialize
 		"""
 		return {}
@@ -105,7 +114,8 @@ class Material(RootClass):
 	"""
 	Class of positionable objects like Actors and Layers, I guess.
 	Methods:
-		Material.init_position(int w, int h, int x, int y, Object inherit_from) returns None
+		Material.init_position(int w, int h, int x, int y, Object inherit_from)
+			returns None
 		Material.get_sprite() returns None or Sprite instance
 		Material.get_console() returns None or libtcodpy Console instance
 		Material.fill(char, color) returns None
@@ -115,11 +125,12 @@ class Material(RootClass):
 		
 	def init_postion(self, w=None, h=None, x=None, y=None, inherit_from=None):
 		"""
-		Material.init_position(int w, int h, int x, int y, Object inherit_from) returns None
+		Material.init_position(int w, int h, int x, int y, Object inherit_from)
+			returns None
 		Tries to initalize position based on the following rules:
 			1. If position arguments are provided, use those.
 			2. If parent is provided and has a position, use that.
-			3. Use (0,0) and 1x1 as position and dimensions.
+			3. As a fallback use (0,0) and 1x1 as position and dimensions.
 		"""
 		if w and h:
 			self.w, self.h = w, h
@@ -139,7 +150,8 @@ class Material(RootClass):
 	def get_sprite(self):
 		"""
 		Material.get_sprite() returns None or Sprite instance
-		Return a suitable object that refers to the Material's graphical representation.
+		Return a suitable Sprite that refers to the Material's graphical
+			representation.
 		"""
 		if hasattr(self, 'sprite'):
 			return self.sprite[0]
@@ -151,7 +163,8 @@ class Material(RootClass):
 	def get_console(self):
 		"""
 		Material.get_console() returns None or libtcodpy Console instance
-		Return a suitable object that refers to the Material's graphical representation.
+		Return a suitable Sprite that refers to the Material's graphical
+			representation.
 		"""
 		if hasattr(self, 'sprite'):
 			return self.sprite[0].console
@@ -170,8 +183,9 @@ class Material(RootClass):
 	def get_bounds(self):
 		"""
 		Material.get_bounds() returns tuple (int, int, int, int)
-		Returns the boundaries of the object as a tuple containing the rectangle x1, y1, x2, y2.
-		If the object does not have a width or height, returns a single-tile area.
+		Returns the boundaries of the object as a tuple containing the
+			rectangle (x1, y1), (x2, y2).  If the object does not have a
+			width or height, returns a single-tile area (equal corners).
 		"""
 
 		if hasattr(self, 'w') and hasattr(self, 'h'):
@@ -182,8 +196,8 @@ class Material(RootClass):
 	def clamp_to_bounds(self, x, y):
 		"""
 		Material.clamp_to_bounds(int x, int y) returns tuple (int, int)
-		Takes an x and y value and clamps it to the boundaries of this Material based on its
-		position and dimensions.
+		Takes an x and y value and clamps it to the boundaries of this
+		Material based on its position and dimensions.
 		"""
 
 		return max(self.x, min(self.x+self.w-1, x)), max(self.y, min(self.y+self.h-1, y))
@@ -191,13 +205,14 @@ class Material(RootClass):
 
 class World(Saveable):
 	"""
-	A Dust World is the root container of a project.  It contains global counters, boards, actors, and world settings.
+	A Dust World is the root container of a project.  It contains global
+		counters, boards, actors, and world settings.
 	Methods:
 		World.get_footprint() returns dict
-		World.create_default_world() returns None
-		World.tick() returns None
-		World.blit(Graphics dest_graphics, ...) returns None
-		World.create_default_world() returns None
+		World.create_default_world()
+		World.tick()
+		World.blit(Graphics dest_graphics, ...)
+		World.create_default_world()
 		World.save(str file_path) returns bool
 	"""
 	def __init__(self, name="New World", tilesaurus_path='data/tilesaurus.json', file_path=False):
@@ -227,8 +242,8 @@ class World(Saveable):
 			
 	def create_default_world(self):
 		"""
-		World.create_default_world() returns None
-		Creates a default board with no parameters, and adds a blank Layer to it.
+		World.create_default_world()
+		Creates a default board with no parameters, and adds a blank Layer.
 		"""
 		self.current_board = Board()
 		self.boards.append(self.current_board)
@@ -241,7 +256,7 @@ class World(Saveable):
 		
 	def tick(self):
 		"""
-		World.tick() returns None
+		World.tick()
 		Ticks the World's Actors, Layers, and Boards.
 		"""
 		for i in self.actors:
@@ -253,8 +268,9 @@ class World(Saveable):
 			
 	def blit(self, dest_graphics, *args, **kwargs):
 		"""
-		World.blit(Graphics dest_graphics, ...) returns None
-		Blits the World's Boards and Layers to dest_graphics and passes other arguments through.
+		World.blit(Graphics dest_graphics, ...)
+		Blits the World's Boards and Layers to dest_graphics and passes other
+			arguments through.
 		"""
 		dest_graphics.clear()
 		for i in self.layers[::-1]:
@@ -264,7 +280,7 @@ class World(Saveable):
 	def save(self, file_path=None):
 		"""
 		World.save(str file_path) returns bool
-		Saves the world to a JSON Dust World file.  Returns True or False.
+		Saves the world to a JSON Dust World file.  Returns status boolean.
 		"""
 		if file_path == None:
 			if hasattr(self, 'file_path'):
@@ -284,8 +300,8 @@ class Board(Saveable, Material):
 	A Dust Board has a width and height and contains board counters and layers.
 	Methods:
 		Board.get_footprint() returns dict
-		Board.tick() returns None
-		Board.blit(Graphics dest_graphics, ...) returns None
+		Board.tick()
+		Board.blit(Graphics dest_graphics, ...)
 		Board.get_sprite() returns Sprite
 	"""
 	def __init__(self, w=80, h=25, x=0, y=0, name="New Board"):
@@ -308,7 +324,7 @@ class Board(Saveable, Material):
 		
 	def tick(self):
 		"""
-		Board.tick() returns None
+		Board.tick()
 		Ticks the Board's Actors and Layers.
 		"""
 		for i in self.actors:
@@ -318,7 +334,7 @@ class Board(Saveable, Material):
 			
 	def blit(self, dest_graphics, *args, **kwargs):
 		"""
-		Board.blit(Graphics dest_graphics, ...) returns None
+		Board.blit(Graphics dest_graphics, ...)
 		Blits the Board's Layers to dest_graphics and passes other arguments through.
 		"""
 		for i in self.layers[::-1]:
@@ -327,16 +343,17 @@ class Board(Saveable, Material):
 
 class Layer(Saveable, Material):
 	"""
-	A Dust Layer has a width and height and relative position, and contains a map.
+	A Dust Layer has a width and height, relative position, sprite, Actors.
 	Methods:
 		Layer.get_footprint() returns dict
 		Layer.tick() returns None
-		Layer.blit(Graphics dest_graphics, ...) returns None
-		Layer.flip(Sprite dest_graphics) returns None
-		Layer.render_game_tile(int id, int color, int param) returns tuple (int, int)
-		Layer.draw_game_tile(int x, int y, int id, int color, int param) returns None
-		Layer.set_game_tile(int x, int y, int id, int color, int param) returns None
-		Layer.set_game_tile_param(int x, int y, int param) returns None
+		Layer.blit(Graphics dest_graphics, ...)
+		Layer.flip(Sprite dest_graphics)
+		Layer.render_game_tile(int id, int color, int param)
+			returns tuple (int, int)
+		Layer.draw_game_tile(int x, int y, int id, int color, int param)
+		Layer.set_game_tile(int x, int y, int id, int color, int param)
+		Layer.set_game_tile_param(int x, int y, int param)
 		Layer.fill(int id, int color, int param)
 	"""
 	def __init__(self, w=80, h=25, x=0, y=0, name="New Layer"):
