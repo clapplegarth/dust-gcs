@@ -245,9 +245,9 @@ class World(Saveable):
 		World.create_default_world()
 		Creates a default board with no parameters, and adds a blank Layer.
 		"""
-		self.current_board = Board()
+		self.current_board = Board(self)
 		self.boards.append(self.current_board)
-		my_layer = Layer(*(getattr(self.current_board, x) for x in ('w','h','x','y')))
+		my_layer = Layer(self, *(getattr(self.current_board, x) for x in ('w','h','x','y')))
 		self.current_board.layers.append(my_layer)
 		
 	def get_footprint(self):
@@ -304,7 +304,8 @@ class Board(Saveable, Material):
 		Board.blit(Graphics dest_graphics, ...)
 		Board.get_sprite() returns Sprite
 	"""
-	def __init__(self, w=80, h=25, x=0, y=0, name="New Board"):
+	def __init__(self, parent, w=80, h=25, x=0, y=0, name="New Board"):
+		self.parent = parent
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
 		self.counters = {}
@@ -356,7 +357,8 @@ class Layer(Saveable, Material):
 		Layer.set_game_tile_param(int x, int y, int param)
 		Layer.fill(int id, int color, int param)
 	"""
-	def __init__(self, w=80, h=25, x=0, y=0, name="New Layer"):
+	def __init__(self, parent, w=80, h=25, x=0, y=0, name="New Layer"):
+		self.parent = parent
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
 		self.sprite = [Sprite(w, h, x, y)]
@@ -480,7 +482,8 @@ class Actor(Saveable, Material):
 		Actor.tick() returns None
 		Actor.blit(Graphics dest_graphics, ...) returns None
 	"""
-	def __init__(self, w=1, h=1, x=0, y=0, name="New Actor"):
+	def __init__(self, parent, w=1, h=1, x=0, y=0, name="New Actor"):
+		self.parent = parent
 		self.w, self.h, self.x, self.y = w, h, x, y
 		self.name = name
 		self.sprite = [Sprite(w, h, x, y)]
