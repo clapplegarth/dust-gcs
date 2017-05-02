@@ -1,0 +1,31 @@
+// Example 1: Bounce around
+point north
+loop
+	go forward
+	if blocked
+		point clockwise
+	
+// Example 2: spin & shoot
+point north
+loop
+	point clockwise
+	shoot
+	// shoot Bullet forward
+
+// Example 3: validate CSV
+open file (prompt string)
+set f to that
+
+split f by "\n"
+for each f
+	split f by ","
+	trim it of "\r "
+	for each of it
+		trim it of "\t "
+		
+set count to (first of f)
+for each f
+	if count != (length of it)
+		say "Invalid \(corrupted\) CSV: first line has different length compared to (index)"
+		goto close
+close file f

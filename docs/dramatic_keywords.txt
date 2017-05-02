@@ -1,0 +1,20 @@
+1	Commands	Yellow
+"backward" "blocked" "clockwise" "counterclockwise" "close file" "first" "for" "forward" "go" "goto" "if" "jump" "length" "loop" "open file" "opp" "point" "print" "prompt" "say" "set" "shoot" "split" "trigger" "trim"
+
+2	Constants	Yellow Underline
+"north" "south" "east" "west" "number" "string"
+
+3	Relational	Orange
+"i" "it" "me" "my" "that" "there"
+
+4	Variables	Teal
+"char" "color" "current_heading"
+
+5	Builtins	Teal Underline
+"BlankActor" "Bullet"
+
+6	Helpers		Orange Italic
+"am" "are" "is" "'s"
+
+8	Ignored	Grey
+"by" "of" "to"
