@@ -13,26 +13,26 @@ class RootClass:
 		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
 	"""
 
-	def redraw(self, dest_graphics, *args, **kwargs):
-		"""
-		RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
-		Drills down recursively through the Dust object heirarchy to
-			reach each object's Sprite, and then calls redraw() on the
-			sprite.  This effectively redraws the current board.
-		"""
-		if hasattr(self, 'current_board'):
-			self.current_board.redraw(dest_graphics, *args, **kwargs)
-		if hasattr(self, 'boards'):
-			for x in self.boards:
-				x.redraw(dest_graphics, *args, **kwargs)
-		if hasattr(self, 'layers'):
-			for x in self.layers:
-				x.redraw(dest_graphics, *args, **kwargs)
-		elif hasattr(self, 'actors'):
-			for x in self.actors:
-				x.redraw(dest_graphics, *args, **kwargs)
-		if hasattr(self, 'sprite'):
-			self.get_sprite().redraw(dest_graphics, *args, **kwargs)
+	# def redraw(self, dest_graphics, *args, **kwargs):
+		# """
+		# RootClass.redraw(Sprite dest_graphics, *args, **kwargs)
+			# Drills down recursively through the Dust object heirarchy to
+			# reach each object's Sprite, and then calls redraw() on the
+			# sprite.  This effectively redraws all the sprites on the board.
+		# """
+		# if hasattr(self, 'current_board'):
+			# self.current_board.redraw(dest_graphics, *args, **kwargs)
+		# if hasattr(self, 'boards'):
+			# for x in self.boards:
+				# x.redraw(dest_graphics, *args, **kwargs)
+		# if hasattr(self, 'layers'):
+			# for x in self.layers:
+				# x.redraw(dest_graphics, *args, **kwargs)
+		# elif hasattr(self, 'actors'):
+			# for x in self.actors:
+				# x.redraw(dest_graphics, *args, **kwargs)
+		# if hasattr(self, 'sprite'):
+			# self.get_sprite().redraw(dest_graphics, *args, **kwargs)
 	
 	def find_main_display(self):
 		"""
@@ -401,7 +401,8 @@ class Layer(Saveable, Material):
 	def blit(self, dest_graphics):
 		"""
 		Layer.blit(Graphics dest_graphics, ...)
-		Blits the Layer's sprite and Actors to dest_graphics and passes other arguments through.
+		Blits the Layer's sprite and Actors to dest_graphics and passes other
+		arguments through.
 		"""
 		if self.dirty:
 			self.flip(dest_graphics)
@@ -421,11 +422,12 @@ class Layer(Saveable, Material):
 			t.append(self.render_game_tile(*i))
 			p+=1
 		self.get_sprite().tilemap = t
-		self.get_sprite().redraw(dest_graphics)
-			
+		self.dirty = True
+		
 	def render_game_tile(self, id, color, param):
 		"""
-		Layer.render_game_tile(int id, int color, int param) returns tuple (int, int)
+		Layer.render_game_tile(int id, int color, int param)
+			returns tuple (int, int)
 		Look up a tile in the tilesaurus and return its char and color as a tuple.
 		"""
 		global tilesaurus
@@ -436,7 +438,8 @@ class Layer(Saveable, Material):
 			
 	def draw_game_tile(self, x, y, id, color=7, param=0):
 		"""
-		Layer.draw_game_tile(int x, int y, int id, int color, int param) returns None
+		Layer.draw_game_tile(int x, int y, int id, int color, int param)
+			returns None
 		Draws the given game tile at the specified coordinates, but does not
 		add it to the map.
 		"""
@@ -445,7 +448,8 @@ class Layer(Saveable, Material):
 	
 	def set_game_tile(self, x, y, id, color=7, param=0):
 		"""
-		Layer.set_game_tile(int x, int y, int id, int color, int param) returns None
+		Layer.set_game_tile(int x, int y, int id, int color, int param)
+			returns None
 		Draws the given game tile at the specified coordinates, but does not
 		add it to the map.
 		"""
@@ -477,11 +481,14 @@ class Layer(Saveable, Material):
 	def fill_func(self, **kwargs):
 		"""
 		Layer.fill_func(...)
-		Fills the Layer based on passed functions.  Calls to this method can include functions and arguments.
-		The functions available to pass are id_func, color_func and param_func.  If id_args, color_args and param_args
-		(respectively) are passed, the respective function gets a number of the address of that tile.  For example, to
-		make a layer all Grass, you might call:  my_layer.fill_func(id_func = lambda: console.tilesaurus.grass).
-		To make a layer have random colors, one would call my_layer.fill_func(color_func = my_console.random_id).
+		Fills the Layer based on passed functions.  Calls to this method can
+		include functions and arguments.  The functions available to pass are
+		id_func, color_func and param_func.  If id_args, color_args and
+		param_args (respectively) are passed, the respective function gets a
+		number of the address of that tile.  For example, to make a layer all
+		Grass, you might call:  my_layer.fill_func(id_func = lambda:
+		console.tilesaurus.grass).  To make a layer have random colors, one
+		would call my_layer.fill_func(color_func = my_console.random_id).
 		"""
 		for i in range(len(self.gamemap)):
 			for f in [['id_func', 'id_args', 0], ['color_func', 'color_args', 1], ['param_func', 'param_args', 2]]:
@@ -525,7 +532,7 @@ class Actor(Saveable, Material):
 		Blits the Layer's Sprite to dest_graphics and passes other arguments
 		through.
 		"""
-		self.sprite[0].blit(dest_graphics, x=self.x, y=self.y)
+		self.get_sprite().blit(dest_graphics, x=self.x, y=self.y)
 
 
 class Graphics(Material):
@@ -546,18 +553,21 @@ class Graphics(Material):
 			Material.__init__(self)
 		else:
 			self.console = False
+		self.dirty = True
 			
 	def blit(self, dest_graphics, x=0, y=0):
 		"""
 		Graphics.blit(Graphics dest_graphics, ...) returns None
-		Prints the libtcodpy console contained in self.console to the Graphics object supplied by dest_graphics.
+		Prints the libtcodpy console contained in self.console to the Graphics
+		object supplied by dest_graphics.
 		"""
-		libtcodpy.console_blit(self.console, 0, 0, self.w, self.h, dest_graphics.console, x, y)
+		libtcodpy.console_blit(self.console, 0, 0, self.w, self.h, dest_graphics.console, 0, 0)
 
 	def get_color(self, c):
 		"""
 		Graphics.get_color(int c) returns libtcodpy.Color
-		Returns a libtcodpy.Color object representing the color c of the CGA color set.
+		Returns a libtcodpy.Color object representing the color c of the
+		CGA color set (4 bits, each bit is I,R,G,B respectively).
 		"""
 		return [libtcodpy.black, libtcodpy.dark_blue, libtcodpy.dark_green, libtcodpy.dark_cyan, libtcodpy.dark_red, libtcodpy.dark_purple, libtcodpy.dark_orange, libtcodpy.light_gray, libtcodpy.dark_gray, libtcodpy.light_blue, libtcodpy.light_green, libtcodpy.light_cyan, libtcodpy.light_red, libtcodpy.light_magenta, libtcodpy.light_yellow, libtcodpy.white, libtcodpy.han][c]
 		
@@ -587,7 +597,7 @@ class Sprite(Graphics, Saveable):
 		self.tilemap = [[0, 7]] * (self.w * self.h)
 		self.tilemask = 0
 		self.dirty = True
-		self.redraw(self)
+		#self.redraw(self)
 		
 	def get_footprint(self):
 		return {'w': False, 'h': False, 'x': False, 'y': False, 'tilemap': False, 'tilemask': False}
@@ -596,19 +606,25 @@ class Sprite(Graphics, Saveable):
 	def get_tile_ref(self, x, y):
 		"""
 		Sprite.get_tile_ref(int x, int y) returns int
-		Based on the given coordinates, returns an integer that can be used as a reference to the Sprite's internal map with an expression such as Sprite.tilemap[x].  Does not, however, return the contents of the map at that position.
+		Based on the given coordinates, returns an integer that can be used as
+		a reference to the Sprite's internal map with an expression such as
+		Sprite.tilemap[x].  Does not, however, return the contents of the map
+		at that position.
 		"""
 		return (y * self.w) + x
 	def get_tile(self, x, y):
 		"""
 		Sprite.get_tile(int x, int y) returns tuple (int, int)
-		Based on the given coordinates, returns a (char, color) tuple of the contents of the map at that position.
+		Based on the given coordinates, returns a (char, color) tuple of the
+		contents of the map at that position.
 		"""
 		return self.tilemap[((y * self.w) + x)]
 	def put_tile(self, x, y, char, color=False):
 		"""
 		Sprite.put_tile(int x, int y, int char, int color) returns None
-		Based on the given coordinates, places a tile of the given character and color at the correct position.  If color is not provided, the color remains the same.
+		Based on the given coordinates, places a tile of the given character
+		and color at the correct position.  If color is not provided, the color
+		remains the same.
 		"""
 		if color:
 			self.tilemap[self.get_tile_ref(x, y)] = (char, color)
@@ -636,27 +652,30 @@ class Sprite(Graphics, Saveable):
 			for i in range(len(self.tilemap)):
 				self.tilemap[i] = [char, color]
 		self.dirty = True
-				
-	def redraw(self, dest_graphics, blit=True):
+		
+	def blit(self, dest_graphics, x=0, y=0):
 		"""
-		Sprite.redraw(Graphics dest_graphics) returns none
-		Redraw the Sprite's entire console with the contents of its tilemap, and then blit it to screen.
+		Graphics.blit(Graphics dest_graphics, ...) returns None
+		Prints the libtcodpy console contained in self.console to the Graphics
+		object supplied by dest_graphics.
 		"""
-		if not self.dirty:
-			return
-		p = 0
-		for i in self.tilemap:
-			if i[0] == self.tilemask:
-				libtcodpy.console_put_char_ex(self.console, (p % self.w), (p / self.w), i[0], self.get_color(i[1]%16), self.get_color(16))
-			else:
-				libtcodpy.console_put_char_ex(self.console, (p % self.w), (p / self.w), i[0], self.get_color(i[1]%16), self.get_color(i[1]/16))
-			p += 1
-		self.blit(dest_graphics)
+		if self.dirty:
+			p = 0
+			for i in self.tilemap:
+				if i[0] == self.tilemask:
+					libtcodpy.console_put_char_ex(self.console, (p % self.w), (p / self.w), i[0], self.get_color(i[1]%16), self.get_color(16))
+				else:
+					libtcodpy.console_put_char_ex(self.console, (p % self.w), (p / self.w), i[0], self.get_color(i[1]%16), self.get_color(i[1]/16))
+				p += 1
+		libtcodpy.console_blit(self.console, 0, 0, self.w, self.h, dest_graphics.console, x, y)
 
 
 class Console(Graphics):
 	"""
-	A Console object is an extension of Graphics that borrows console manipulations in order to create a viable class to use as the main console screen.  Ultimately, this is where all graphics must be blitted to in order to be displayed.
+	A Console object is an extension of Graphics that borrows console
+	manipulations in order to create a viable class to use as the main console
+	screen.  Ultimately, this is where all graphics must be blitted to in order
+	to be displayed.
 	Methods:
 		Console.end_cycle() returns None
 		Console.get_key() returns libtcodpy.KeyEvent or something, probably...
@@ -680,14 +699,16 @@ class Console(Graphics):
 	def end_cycle(self):
 		"""
 		Console.end_cycle() returns None
-		End the graphical frame and flush the console, sleeping until the next frame.
+		End the graphical frame and flush the console, sleeping until the next
+		frame.
 		"""
 		libtcodpy.console_flush()
 			
 	def get_key(self):
 		"""
-		Console.get_key() returns libtcodpy.KeyEvent or something, probably... ~~
-		Check for keypresses and return an event representing the state of the keyboard.
+		Console.get_key() returns libtcodpy.Key
+		Check for keypresses and return an event representing the state of the
+		keyboard.
 		"""
 		return libtcodpy.console_check_for_keypress(libtcodpy.KEY_PRESSED | libtcodpy.KEY_RELEASED)
 
