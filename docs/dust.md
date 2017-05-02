@@ -8,7 +8,6 @@ Introduction
 Dustage is a GCS heavily inspired by __MegaZeux__.
 
 
-
 Layers
 ------
 
@@ -31,6 +30,129 @@ When you think of an actor, you may think of a talented movie star, a performer 
 | __say__ "Why hello there!" | Greet them...                         |
 | __return__                 | And go back to what I was doing.      |
 
+
+
+### Actor Syntax
+
+Most lines take the form `command argument` where argument can be a variable, expression, number, string, or nested command.
+
+#### Helping Words
+
+Helping words allow the language to flow more smoothly.
+
+##### `is`, `am`, `are`
+
+These commands allow you to pass arguments to a command before a function.  For example, you could use `if blocked forward player` to check if an actor named _Player_ is blocked in the _forward_ direction.  However, a more natural way to write this would be `if player is blocked forward`.  This is processed in the same way as `if blocked forward player`.
+
+The words `is`, `am` and `are` are completely interchangeable, but of course, some sound gramatically better than others.  This is meant to prevent constructs like `if i is blocked`, which doesn't sound the best.
+
+##### `'s`
+
+The 's command is similar to `is` in that it references another object instead of the default Actor (usually `me`).  However, it will instead reference an Actor's property, if it exists.
+
+##### `my`
+
+Equivalent to saying `me's`.  You can probably guess that this exists because of how much better `my` sounds when compared to `me's`.
+
+### Actor Commands
+
+#### List of commands
+
+##### `backward`
+
+The direction opposite where the Actor is pointing.  Equivalent to `opp`.  See __Directions__, __Point__, __Forward__.  For __offscreen Actors__, this is always equal to `south`.
+
+##### `blocked`
+
+Checks to see if the actor collides with something if it were to move forward.  You can supply a direction, i.e. `blocked north`, to check for a specific direction.  You can also use `is` to supply a different Actor to check, i.e., `player is blocked forward`.
+
+##### `clockwise`
+
+Returns the direction clockwise of the current Actor's heading.  You can supply a direction to `clockwise`; for example `clockwise north` is equal to `east`.  You can also supply an actor to be relative from, i.e. `clockwise (forward of player)` or just `clockwise player` (both are equal).
+
+##### `close file`
+
+Closes an open file object.  See __Open file__.
+
+##### `counterclockwise`
+
+The direction 90 degrees counterclockwise of the Actor's heading.  Equivalent to `opp clockwise`.  You can supply a direction to `counterclockwise`; for example `counterclockwise north` is equal to `west`.  You can also supply an actor to be relative from, i.e. `counterclockwise (player's forward)` or just `counterclockwise player` (both are equal).
+
+##### `for each`
+
+Loop over `it`.  This command can be given an argument to use something other than `it` to loop over.  If the argument is a number, it runs once.  If the argument is a string, it iterates over each character as a number.  If the object is a list, it runs once for each item in the list.  In each loop, `it` will be set to the argument or piece of the argument in question, and `index` will be set to the index of the argument in question.
+
+##### `forward`
+
+The direction that the Actor is facing.  It can be given a reference to an Actor to use that Actor's heading, i.e. `forward player`.  For __offscreen Actors__, this is always equal to `north`. ~~Needs to be equivalent to some inherent property of onscreen Actors.~~
+
+##### `go`
+
+Moves the Actor forward one step.  It can be given a direction argument.  See __Forward__.
+
+##### `goto`
+
+Makes the Actor jump to the given command.  This does not have to be a label.
+
+##### `if`
+
+Conditional statement.  (More)
+
+##### `jump`
+
+Makes the Actor jump to the given label.  You can supply another Actor as an argument to make them jump instead; for example, `jump robert to start`.
+
+##### `length`
+
+Returns the length of the argument.  If the argument is a number, it returns the number of digits in the number.
+
+##### `loop`
+
+Conditional statement that creates a loop that can only be exited by `goto` or `jump` or by recieving a `trigger` command.
+
+##### `open file`
+
+Opens a file for writing; takes an argument that must be a string pointing to a file name.  You will want to set something to the result of `open file` so you can use it later.  For example, you can do `open file "mars.txt"` and then, on the next line, `set mars_data to that`.
+
+##### `opp`
+
+Returns the direction opposite of the Actor's heading.  If an argument is given, it returns the opposite of that.  For example, `opp north` is equal to `south`.  See also __backward__.
+
+##### `point`
+
+Makes the Actor face in the given direction.  Takes a direction as an argument.  It can also take the name of another Actor as an argument; for example, `point Lewis to west` or `point curly backward`.
+
+##### `print`
+
+Prints out the variable in a representative format.  See also __say__.
+
+##### `prompt`
+
+Prompts the user for a variable of a given type.  It can take a variable type as an argument, such as `prompt number` or `prompt string`.  Best used with the `say` command.
+
+##### `say`
+
+Equivalent to `print`.
+
+##### `set`
+
+Takes two arguments, a variable and any other value, and sets the variable to the value.  For example, `set cookies to 10`, `set best_friend to Lewis`, or `set distance to sqrt ((x2-x1)^2 + (y2-y1)^2)`.
+
+##### `shoot`
+
+Creates a Bullet object at the block where the Actor is pointing.  This can be supplied with a different object to shoot, as well as a different direction.
+
+##### `split`
+
+Splits the first argument by using the "glue" or "seperator" given via the second argument.  For example, `split "Time keeps on slippin'" by " "` would give you a list, `["Time", "keeps", "on", "slippin'"]`.
+
+##### `trigger`
+
+Sends an object to a certain label.  An alias of `jump`.
+
+##### `trim`
+
+Trims the first argument, a string, based on the characters in the string in the second argument.  The characters do not have to be in order.  For example, `trim "   Hey!   " of " "` would return `"Hey!"`.
 
 
 File Format
